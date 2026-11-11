@@ -25,7 +25,8 @@ class TaskCreate(Task):
     )
 
     description:Optional[str]=Field(
-        max_length=500
+        max_length=500,
+        examples=["esta es la descripcion de la tarea"]
 
     )  
 
@@ -42,9 +43,7 @@ class TaskUpdate(Task):
 
 @app.get("/tasks",response_model=List[TaskPublic])
 def get_tasks(): 
-    if len(task_list)>0:  
-        return task_list  
-    raise HTTPException(status_code="204",description="No hay tareas registradas")
+    return task_list
     
 
 @app.get("/task/{id}",response_model=Union[TaskPublic,TaskSummary]) 
@@ -62,7 +61,7 @@ def get_task(id:int,description:bool=False):
                         "title":task["title"]
                         }
 
-    return HTTPException(status_code="404",description="Tarea no encontrada")    
+    return HTTPException(status_code="404",detail="Tarea no encontrada")    
 
 @app.post("/task",response_model=TaskSummary,response_description="Tarea creada")
 def create_task(task:TaskCreate): 
@@ -84,7 +83,14 @@ def update_task(id:int,data:TaskUpdate):
             task["title"]=updated_task["title"]  
             if "description" in updated_task: task["description"]=updated_task["description"] 
             return task  
-    raise HTTPException(status_code="404",description="Tarea no encontrada")
+    raise HTTPException(status_code="404",detail="Tarea no encontrada")
 
-      
+@app.delete("/task/{id}",status_code=204,response_description="Tarea eliminada")      
+def delete_task(id:int): 
+    for i in range(len(task_list)): 
+        task=task_list[i]
+        if task["id"]==id:  
+            task_list.pop(i)
+            return {"message":"Se ha eliminado la tarea"}
 
+    raise HTTPException(status_code="404",detail="Tarea no encontrada")
